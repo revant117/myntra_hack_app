@@ -25,6 +25,9 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Locale;
@@ -53,6 +56,8 @@ public class MainActivity extends AppCompatActivity {
     public ScrollView scrollView;
     public LinearLayout scrollViewContentContainer;
 
+    String[] going = {"go", "goto", "take", "start", "begin", "explore", "shopping", "find", "search"};
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         itemsFragment = new ItemsFragment();
-        showItemsFragment();
+//        showItemsFragment();
         browser = (WebView)findViewById(R.id.webview);
         browser.getSettings().setJavaScriptEnabled(true);
         browser.addJavascriptInterface(new JsInterface(MainActivity.this), "Android");
@@ -83,8 +88,8 @@ public class MainActivity extends AppCompatActivity {
                         .setInterpolator(new AccelerateDecelerateInterpolator()).setDuration(1500).withEndAction(new Runnable() {
                     @Override
                     public void run() {
-                        textToSpeech("Hi, I am style bot", null);
-                        getJs(URLStore.BASE_URL);
+                        getJs(URLStore.BASE_URL+"/?id="+android_id);
+                        getConfigJSON(URLStore.BASE_URL + "/get-config?id=" + android_id);
                     }
                 });
             }
@@ -103,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
         String id = sp.getString(Constants.USER_ID, null);
         if( id != null) {
             status.setText("Status : Logged in with " + id);
+            android_id = id;
         } else {
             android_id = UUID.randomUUID().toString();
             SharedPreferences.Editor editor = sp.edit();
@@ -150,6 +156,7 @@ public class MainActivity extends AppCompatActivity {
                             .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
 //                    textToSpeech(result.get(0));
                     String strResult = result.get(0);
+                    processCommand(strResult);
                     addToScrollViewByCustomer(strResult);
                     runCallback(strResult);
                 }
@@ -177,6 +184,18 @@ public class MainActivity extends AppCompatActivity {
                 currentJsCallback = null;
             }
         });
+    }
+
+    public void processCommand(String result) {
+        String[] commands = result.split(" ");
+        for(String command : commands) {
+            for(String key: going) {
+                if(key.equals(command)) {
+                    showItemsFragment();
+                }
+            }
+        }
+
     }
 
     public void addToScrollViewByCustomer(String text) {
@@ -233,6 +252,35 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void getConfigJSON(String url) {
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+                try {
+                    JSONObject jsonObject = new JSONObject(response.body().string());
+                    Log.d("JS!", jsonObject.toString());
+                    if(jsonObject.getString("greetings").equals("true")) {
+//                        addJsToWebView("window.setGreeting(true);");
+                    }else {
+//                        addJsToWebView("window.setGreeting(false);");
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
 
     private void getJs(String url) {
         OkHttpClient client = new OkHttpClient();

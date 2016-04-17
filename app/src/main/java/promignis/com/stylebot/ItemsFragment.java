@@ -1,7 +1,6 @@
 package promignis.com.stylebot;
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -11,6 +10,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -33,7 +34,6 @@ public class ItemsFragment extends Fragment {
         super.onCreate(savedInstanceState);
     }
 
-    @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_items, null);
@@ -69,8 +69,11 @@ public class ItemsFragment extends Fragment {
             @Override
             public void onResponse(Call call, Response response)  throws IOException {
                 if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
-                Log.d("api", response.body().string());
-                JSONObject jsonObj = new JSONObject(response.body().string());
+                try {
+                    JSONObject jsonObj = new JSONObject(String.valueOf(response.body()));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
