@@ -61,6 +61,9 @@ public class MainActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             WebView.setWebContentsDebuggingEnabled(true);
         }
+
+        itemsFragment = new ItemsFragment();
+        showItemsFragment();
         browser = (WebView)findViewById(R.id.webview);
         browser.getSettings().setJavaScriptEnabled(true);
         browser.addJavascriptInterface(new JsInterface(MainActivity.this), "Android");
@@ -113,7 +116,6 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
-        itemsFragment = new ItemsFragment();
     }
 
     public void startSpeaking(String callback) {
@@ -273,8 +275,10 @@ public class MainActivity extends AppCompatActivity {
     public void showItemsFragment() {
         android.support.v4.app.FragmentManager fragmentManager = getSupportFragmentManager();
         android.support.v4.app.FragmentTransaction ft = fragmentManager.beginTransaction();
-        ft.add(R.id.fragment_container, itemsFragment);
-        ft.commit();
+        if(ft != null) {
+            ft.add(R.id.fragment_container, itemsFragment);
+            ft.commit();
+        }
     }
 
     @Override
